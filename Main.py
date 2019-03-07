@@ -9,33 +9,31 @@ from tqdm import tqdm
 Notes:
 1.не таблицу выводить, а только номера без повторов по слову или фразе
 2. сделать в препроцессор запись в файл
-
-
+'''
+#!!!!!!!!!!
 def row_preprocessor(str):
 
-    abbreviation = ["рад", "мрад", "мкрад",  # угол
-                    "см", "м", "мм", "мкм", "нм", "дм",  # метр
-                    "кг", "мг", "мкг",  # вес
-                    "мин", "ч", "сут", "с", "мс", "мкс", "нс",  # время
-                    "л",  # объем
-                    "Гц", "ГГц", "МГц", "кГц",  # ГЦ
-                    "шт", # кол-во
-                    "ом","а","в"]# эл-тех
-
-    str = re.sub(r'[]«[}{»()<>/+*_"-:;.,]', ' ', str).lower()
-    str = re.sub(r'[@#$%^&`|!?~]', ' ', str)
-    str = re.sub(r'\d+', '', str)
-    str = re.sub(r'\d+[xX]\d+| \d+[xX]\d+[xX]\d+', '', str)  # eng
-    str = re.sub(r'\d+[хХ]\d+| \d+[хХ]\d+[хХ]\d+', '', str)  # rus
-
-    str = re.sub("[^\w]", " ", str).split()
-
+    #sets
     stop_words_rus = set(stopwords.words('russian'))
     stop_words_eng = set(stopwords.words('english'))
+    abbreviation = ["рад", "мрад", "мкрад",  # угол
+                    "см", "м", "мм", "мкм", "нм", "дм",  # метр
+                    "кг", "мг", "мкг", "г", "т",  # вес
+                    "мин", "ч", "сут", "с", "мс", "мкс", "нс",  # время
+                    "л",  # объем
+                    "гц", "ггц", "мгц", "кгц",  # Гц
+                    "шт",  # кол-во
+                    "ом", "а", "в",  # эл-тех
+                    "млн", "тыс", "млрд", "руб", "ме",  # денеж.ср.
+                    "бит", "байт", "кбай", "мбайт", "гбайт", "тбайт", "мбайт"]  # информ.
 
-    words = [word for word in str   if not word in stop_words_rus]
-    words = [word for word in words if not word in stop_words_eng]
-    words = [word for word in words if not word in abbreviation]
+    str = re.sub(r'\d+[xX]\d+| \d+[xX]\d+[xX]\d+', '', str)  # eng
+    str = re.sub(r'\d+[хХ]\d+| \d+[хХ]\d+[хХ]\d+', '', str)  # rus
+    str = re.sub(r'\d+', '', str).lower()
+    str = re.sub("[^\w]", " ", str).split()
+
+    words = [word for word in str if (not word in abbreviation)and(not word in stop_words_rus)and(not word in stop_words_eng)and(len(word)>2)]
+
     str = ' '.join(words)
 
     return str
@@ -56,31 +54,28 @@ def reader(file):
 
     return str1, str2
 
+def count_finder(file,SEARCH_WORD):
+    file = file[file['Data'].str.contains(SEARCH_WORD.lower(), flags=re.I)]
+    sorted_file=file
+    file = file['Count']  # данные
+    str3 = []
+    for row in file:
+        str3.append(str(row))
+    return set(str3),sorted_file
 
-def select_rows(df, search_strings):
-    unq, IDs = np.unique(df, return_inverse=True)  # находит ункальные элементы в датасете
-    unqIDs = np.searchsorted(unq, search_strings)  # находит, сортирует по search strings
-    return df[((IDs.reshape(df.shape) == unqIDs[:, None, None]).any(-1)).all(0)]
+#FILE = 'data/123.csv'
+FILE = 'data/nomenklatura.csv'
+SEARCH_WORD = 'brother'
 
-file = pd.read_csv('data/123.csv', sep='\t', encoding='PT154')
+file = pd.read_csv(FILE, sep='\t', encoding='PT154')
 
 str1, str2 = reader(file)
-
-df = pd.DataFrame({"Counts": str2, "Data": str1})
+df = pd.DataFrame({'Count': str2, 'Data': str1})
 #print(df)
-#print(df.loc[df["Data"].isin(["принтер brother ty"])])
 
-#df_modified = select_rows(df,["принтер"])
-#print(df_modified)
-'''
-
-test_str = "мама папа мама папа 23 принтер сканер"
-search_word = "23 "
-if search_word in test_str:
-    print(test_str)
-else:
-    print(None)
-
+counts,sorted_file = count_finder(df,SEARCH_WORD)
+print(sorted_file)
+print(sorted(counts))
 
 
 
