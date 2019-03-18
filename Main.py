@@ -5,6 +5,7 @@ import pymorphy2
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from tqdm import tqdm
+<<<<<<< HEAD
 import pymorphy2
 import numpy as np
 import re
@@ -48,6 +49,17 @@ def noun_selector(input_str):
 
 def row_preprocessor(str):
     # sets
+=======
+'''
+Notes:
+1.не таблицу выводить, а только номера без повторов по слову или фразе
+2. сделать в препроцессор запись в файл
+'''
+#!!!!!!!!!!
+def row_preprocessor(str):
+
+    #sets
+>>>>>>> c9e3e02949980efbab3dbe359075a47f94ac9863
     stop_words_rus = set(stopwords.words('russian'))
     stop_words_eng = set(stopwords.words('english'))
     abbreviation = ["рад", "мрад", "мкрад",  # угол
@@ -63,6 +75,7 @@ def row_preprocessor(str):
 
     str = re.sub(r'\d+[xX]\d+| \d+[xX]\d+[xX]\d+', '', str)  # eng
     str = re.sub(r'\d+[хХ]\d+| \d+[хХ]\d+[хХ]\d+', '', str)  # rus
+<<<<<<< HEAD
     str = re.sub(r'[A-z]', "", str)  # удаление английских литералов
     str = re.sub(r'\d+', '', str).lower()
     str = re.sub("[^\w]", " ", str).split()
@@ -71,6 +84,12 @@ def row_preprocessor(str):
              (not word in abbreviation) and (not word in stop_words_rus) and (not word in stop_words_eng) and (
                          len(word) > 2)]
     # print(words)
+=======
+    str = re.sub(r'\d+', '', str).lower()
+    str = re.sub("[^\w]", " ", str).split()
+
+    words = [word for word in str if (not word in abbreviation)and(not word in stop_words_rus)and(not word in stop_words_eng)and(len(word)>2)]
+>>>>>>> c9e3e02949980efbab3dbe359075a47f94ac9863
 
     str = ' '.join(words)
     str = noun_selector(str)
@@ -93,7 +112,16 @@ def reader(file):
 
     return str1, str2
 
+def count_finder(file,SEARCH_WORD):
+    file = file[file['Data'].str.contains(SEARCH_WORD.lower(), flags=re.I)]
+    sorted_file=file
+    file = file['Count']  # данные
+    str3 = []
+    for row in file:
+        str3.append(str(row))
+    return set(str3),sorted_file
 
+<<<<<<< HEAD
 def count_finder(file, SEARCH_WORD):
     file = file[file['Data'].str.contains(SEARCH_WORD.lower(), flags=re.I)]
     # sorted_file=file
@@ -258,7 +286,21 @@ if search_word in test_str:
     print(test_str)
 else:
     print(None)
+=======
+#FILE = 'data/123.csv'
+FILE = 'data/nomenklatura.csv'
+SEARCH_WORD = 'brother'
 
+file = pd.read_csv(FILE, sep='\t', encoding='PT154')
+
+str1, str2 = reader(file)
+df = pd.DataFrame({'Count': str2, 'Data': str1})
+#print(df)
+>>>>>>> c9e3e02949980efbab3dbe359075a47f94ac9863
+
+counts,sorted_file = count_finder(df,SEARCH_WORD)
+print(sorted_file)
+print(sorted(counts))
 
 #сделать счета строкой
 
